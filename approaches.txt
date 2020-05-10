@@ -1,0 +1,107 @@
+My first target was to create a datastructure and populate the entire data from file to the data structure.
+
+Initial approach:
+Added a Node class like below:
+
+class Node(object):
+	def __init__(self, data):
+		self.data = data
+		self.children = []
+	def add_child(self, obj):
+		self.children.append(obj)
+
+Wrote a function to load the data into a datastructure using the above Node class:
+
+root = None
+def load_input_data(path):
+	f = open(path,'r')
+	global root
+	current_root = root
+	for line in f:
+		print("Processing line : {}".format(line))
+		if line.startswith('#'):
+			print('skipping line as it is a comment')
+			continue
+		parent_id = line.split('\t')[0]
+		child_id = line.rstrip('\n').split('\t')[1]
+		print("parent_id : {}".format(parent_id))
+		print("child_id : {}".format(child_id))
+		if int(parent_id) > int(child_id) :
+			print("skipping line as it is already processed")
+			continue
+		if current_root == None:
+			print("Processing first node")
+			current_root = Node(parent_id)
+			current_root.add_child(Node(child_id))
+			root = current_root
+		elif int(current_root.data) == int(parent_id):
+			print("Parent already exists, appending child")
+			current_root.add_child(Node(child_id))
+		else:
+			for child in current_root.children:
+				if child.data == parent_id:
+					print("New Parent found, changing current_root")
+					current_root = child
+			current_root.add_child(Node(child_id))
+		print("Current_Root :{},current_root_children :{}".format(current_root.data,current_root.get_children_data()))
+		
+While testing the above function, I soon realized the given data is of a tree-like strucure as there were relationships between children at the same level as well. So its a graph. Now I need to create a graph like data structure and load the data.
+
+Approach 2:
+Created a Node class and create_graph method to load the data into the graph like datastructure:
+
+class Node(object):
+    def __init__(self, data):
+        self.data = data
+        self.connected_nodes = []
+    def add_connection(self, obj):
+        if obj not in self.connected_nodes:
+            self.connected_nodes.append(obj)
+    def get_connected_nodes_data(self):
+        connected_nodes_data_list=[]
+        for Node in self.connected_nodes:
+            connected_nodes_data_list.append(Node.data)
+        return connected_nodes_data_list
+
+all_nodes = []
+def create_graph(path):
+    f = open(path,'r')
+    global all_nodes
+    for line in f:
+        print("Processing line : {}".format(line))
+        if line.startswith('#'):
+            print('skipping line as it is a comment')
+            continue
+        node1 = line.split('\t')[0]
+        node2 = line.rstrip('\n').split('\t')[1]
+        Node1 = None
+        Node2 = None
+        found_node1 = 0
+        found_node2 = 0
+        for N in all_nodes:
+            if N.data == node1:
+                Node1 = N
+                found_node1 +=1
+            if N.data == node2:
+                Node2 = N
+                found_node2 +=1
+            if found_node1 + found_node2 == 2:
+                break
+        if not found_node1:
+            Node1 = Node(node1)
+            all_nodes.append(Node1)
+        if not found_node2:
+            Node2 = Node(node2)
+            all_nodes.append(Node2)
+        Node1.add_connection(Node2)
+        Node2.add_connection(Node1)
+    print("Print All added nodes")
+    for Node in all_nodes:
+        print("Node : {}, Connected Nodes : {}".format(Node.data,Node.get_connected_nodes_data()))
+
+This was working perfectly to populate the data structures.
+But the problem statement says 'find the common nodes' and shows an example of a tree like structure which is not the case of the actual data given.
+So, instead of common nodes I was trying to write a function which will take 2 Nodes as input and return a list of Paths( Each path being a set of nodes ) between the 2 given nodes, but it was becoming very complex :(
+
+Approach 3:
+With the understanding that it is getting very difficult to find path between 2 nodes I moved on to load the data into an adjucent matrix like data structure 
